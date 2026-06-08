@@ -19,4 +19,16 @@ npm run build
 
 ## Deploy
 
-The repository includes a GitHub Pages workflow at `.github/workflows/deploy.yml`. Push to `main`, then enable GitHub Pages with **GitHub Actions** as the source in the repository settings.
+The repository includes a GitHub Pages workflow at `.github/workflows/deploy.yml`.
+
+1. Push to `main`.
+2. Open the repository on GitHub.
+3. Go to **Settings** -> **Pages**.
+4. Set **Source** to **GitHub Actions**.
+5. Re-run the **Deploy to GitHub Pages** workflow if the first deploy failed before Pages was enabled.
+
+After Pages is enabled, the site will be published at:
+
+```text
+https://hova88.github.io/read_dostoevsky/
+```
