@@ -1,0 +1,342 @@
+:root {
+  color-scheme: light;
+  --bg: #ece7dc;
+  --ink: #221f1a;
+  --muted: #786f63;
+  --line: rgba(63, 55, 45, 0.18);
+  --panel: rgba(255, 252, 244, 0.82);
+  --panel-solid: #fffaf0;
+  --accent: #8e2f24;
+  --accent-2: #2d6a66;
+  --shadow: 0 18px 50px rgba(45, 35, 20, 0.12);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+:root[data-theme='night'] {
+  color-scheme: dark;
+  --bg: #171918;
+  --ink: #eee5d2;
+  --muted: #a9a08e;
+  --line: rgba(238, 229, 210, 0.16);
+  --panel: rgba(35, 35, 31, 0.86);
+  --panel-solid: #22231f;
+  --accent: #d66e5f;
+  --accent-2: #7fb8ae;
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    linear-gradient(90deg, rgba(45, 106, 102, 0.08), transparent 28%, transparent 70%, rgba(142, 47, 36, 0.08)),
+    var(--bg);
+  color: var(--ink);
+}
+
+button,
+select,
+input {
+  font: inherit;
+}
+
+.reader-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  z-index: 20;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px clamp(18px, 4vw, 52px);
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel-solid) 86%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+  gap: 12px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  color: var(--accent);
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 720;
+  letter-spacing: 0;
+}
+
+.brand p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.select-wrap select {
+  max-width: min(38vw, 260px);
+  height: 38px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-solid);
+  color: var(--ink);
+}
+
+.segmented,
+.range-wrap,
+.icon-button {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 38px);
+  height: 38px;
+  overflow: hidden;
+  border-radius: 7px;
+}
+
+.segmented button,
+.icon-button {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.segmented button {
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+}
+
+.segmented button:last-child {
+  border-right: 0;
+}
+
+.segmented button[data-active='true'],
+.icon-button:hover,
+.segmented button:hover {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.range-wrap {
+  display: flex;
+  align-items: center;
+  height: 38px;
+  gap: 8px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: var(--muted);
+}
+
+.range-wrap input {
+  width: 112px;
+  accent-color: var(--accent);
+}
+
+.icon-button {
+  width: 38px;
+  height: 38px;
+  border-radius: 7px;
+}
+
+.reader-stage {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 46px) clamp(14px, 3vw, 34px) 60px;
+}
+
+.page {
+  position: relative;
+  min-height: calc(100vh - 128px);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 220px),
+    var(--panel-solid);
+  box-shadow: var(--shadow);
+}
+
+.chapter-heading {
+  padding: clamp(28px, 5vw, 58px) clamp(24px, 7vw, 72px) 0;
+}
+
+.chapter-heading p {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.chapter-heading h2 {
+  max-width: 820px;
+  margin: 0;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(32px, 5vw, 62px);
+  font-weight: 500;
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.text-plane {
+  position: relative;
+  min-height: 420px;
+}
+
+.text-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  overflow: visible;
+  color: var(--ink);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  white-space: pre;
+  will-change: transform;
+}
+
+.text-line.is-lead:first-letter {
+  color: var(--accent);
+}
+
+.stage-art,
+.pull-note {
+  position: absolute;
+  z-index: 3;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 36px rgba(39, 28, 18, 0.14);
+}
+
+.stage-art {
+  border-radius: 5px;
+  background: #d7c9b4;
+}
+
+.stage-art img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: saturate(0.82) contrast(1.03);
+}
+
+.pull-note {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 22px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-2) 16%, var(--panel-solid));
+}
+
+.pull-note span {
+  color: var(--accent-2);
+  font-size: 12px;
+  font-weight: 760;
+  text-transform: uppercase;
+}
+
+.pull-note strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+:root[data-mode='focus'] .page {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+:root[data-mode='flow'] .stage-art,
+:root[data-mode='flow'] .pull-note,
+:root[data-mode='focus'] .stage-art,
+:root[data-mode='focus'] .pull-note {
+  display: none;
+}
+
+svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    position: static;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .select-wrap {
+    width: 100%;
+  }
+
+  .select-wrap select {
+    flex: 1;
+    max-width: none;
+  }
+
+  .range-wrap input {
+    width: 92px;
+  }
+
+  .reader-stage {
+    padding-inline: 10px;
+  }
+
+  .page {
+    border-radius: 6px;
+  }
+}
