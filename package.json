@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
+    "@chenglou/pretext": "^0.0.7",
     "vite": "^6.0.0"
   },
   "devDependencies": {
