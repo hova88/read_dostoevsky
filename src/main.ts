@@ -1,6 +1,5 @@
 import { layout, prepare } from '@chenglou/pretext'
 import source from '../books/notes-from-the-underground.md?raw'
-import sourceZh from '../books/notes-from-the-underground_zh.md?raw'
 import './style.css'
 
 type Block =
@@ -10,14 +9,11 @@ type Block =
   | { type: 'paragraph'; text: string; note?: boolean }
 
 const blocks = parseMarkdown(source)
-const zhBlocks = parseMarkdown(sourceZh)
 const title = cleanTitle(blocks.find((block) => block.type === 'title')?.text ?? 'Notes from the Underground')
 const byline = cleanByline(blocks.find((block) => block.type === 'byline')?.text ?? 'Fyodor Dostoyevsky')
 const readingBlocks = blocks.filter((block) => block.type !== 'title' && block.type !== 'byline')
-const zhReadingBlocks = zhBlocks.filter((block) => block.type !== 'title' && block.type !== 'byline')
 const navigationItems = readingBlocks.filter((block): block is Extract<Block, { type: 'heading' }> => block.type === 'heading')
 const paragraphBlocks = readingBlocks.filter((block): block is Extract<Block, { type: 'paragraph' }> => block.type === 'paragraph')
-const translationBlocks = zhReadingBlocks.filter((block): block is Extract<Block, { type: 'paragraph' }> => block.type === 'paragraph')
 const preparedTextCache = new Map<string, ReturnType<typeof prepare>>()
 let layoutFrame = 0
 
@@ -38,16 +34,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         ${renderReadingBlocks(readingBlocks)}
       </div>
     </article>
-    <aside class="translation-rail" aria-live="polite" aria-label="Chinese translation">
-      <p class="translation-kicker">中文对照</p>
-      <div class="translation-copy" id="translationCopy">将光标停在段落上，或选中一段英文。</div>
-    </aside>
   </main>
 `
 
 applyPretextLayout()
 window.addEventListener('resize', schedulePretextLayout)
-bindImplicitTranslation()
 
 function parseMarkdown(markdown: string): Block[] {
   const lines = markdown.replace(/\r\n/g, '\n').split('\n')
@@ -131,7 +122,7 @@ function renderHeading(block: Block) {
 }
 
 function renderParagraph(block: Extract<Block, { type: 'paragraph' }>, index: number) {
-  return `<p class="${block.note ? 'note' : 'body-copy'}" data-pretext="${index}" data-translation-index="${index}" tabindex="0">${escapeHtml(block.text)}</p>`
+  return `<p class="${block.note ? 'note' : 'body-copy'}" data-pretext="${index}">${escapeHtml(block.text)}</p>`
 }
 
 function renderNavigationItem(block: Extract<Block, { type: 'heading' }>) {
@@ -165,36 +156,6 @@ function applyPretextLayout() {
     const measured = layout(prepared, width, lineHeight)
     element.style.minHeight = `${Math.ceil(measured.height)}px`
   })
-}
-
-function bindImplicitTranslation() {
-  const output = document.querySelector<HTMLElement>('#translationCopy')
-  if (!output) return
-
-  document.querySelectorAll<HTMLElement>('[data-translation-index]').forEach((element) => {
-    const index = Number(element.dataset.translationIndex)
-    element.addEventListener('pointerenter', () => showTranslation(index, output, element))
-    element.addEventListener('focus', () => showTranslation(index, output, element))
-  })
-
-  document.addEventListener('selectionchange', () => {
-    const selection = document.getSelection()
-    if (!selection || selection.isCollapsed) return
-    const anchor = selection.anchorNode?.parentElement?.closest<HTMLElement>('[data-translation-index]')
-    if (!anchor) return
-    showTranslation(Number(anchor.dataset.translationIndex), output, anchor)
-  })
-}
-
-function showTranslation(index: number, output: HTMLElement, sourceElement: HTMLElement) {
-  const translation = translationBlocks[index]?.text
-
-  document.querySelectorAll<HTMLElement>('[data-translation-index][data-active="true"]').forEach((element) => {
-    element.dataset.active = 'false'
-  })
-  sourceElement.dataset.active = 'true'
-  output.textContent = translation ?? '这一段的中文译文仍在整理中。'
-  output.dataset.pending = String(!translation)
 }
 
 function getContentWidth(element: HTMLElement, styles: CSSStyleDeclaration) {
