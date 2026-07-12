@@ -1,8 +1,8 @@
 # Read Dostoevsky
 
-A GitHub Pages reader for Fyodor Dostoevsky texts, built with Vite, TypeScript, and `@chenglou/pretext`.
+A quiet GitHub Pages library for four essential works by Fyodor Dostoevsky, built with Vite and TypeScript. Books are loaded on demand and reading progress is kept locally in the browser.
 
-The main reading surface uses Pretext's dynamic layout APIs (`prepareWithSegments`, `layoutNextLineRange`, and `materializeLineRange`) to lay out each line manually. In the default `spread` mode, line widths change as the text flows around a portrait and pull quote, similar to the Pretext dynamic-layout demo.
+The public-domain source PDFs live in `books/`. Reader-ready Markdown editions sit beside them; run `python3 scripts/extract_books.py` (with `pypdf` installed) to regenerate the extracted novels. `notes-from-the-underground.md` is hand-cleaned and intentionally not overwritten by the script.
 
 ## Run locally
 
