@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository is a static Dostoevsky reader built with Vite and TypeScript. Application logic lives in `src/main.ts`; it loads Markdown editions on demand, renders navigation and reading blocks, and remembers progress. Global presentation is in `src/style.css`, while `src/vite-env.d.ts` supplies Vite types. Reading material and source PDFs belong in `books/`; `scripts/extract_books.py` regenerates the extracted Markdown. `index.html` is the Vite entry point, and `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages.
+This repository is a static Dostoevsky reader built with Vite and TypeScript. Application logic lives in `src/main.ts`; it loads Markdown editions on demand, renders navigation, synchronizes supported audio, and remembers progress. Global presentation is in `src/style.css`. Reading material and source PDFs belong in `books/`; generated audio and timing data live in `public/audio/`. The `scripts/` directory contains reproducible extraction and alignment tools. `index.html` is the Vite entry point, and `.github/workflows/deploy.yml` builds and deploys `dist/` to GitHub Pages.
 
 ## Build, Test, and Development Commands
 

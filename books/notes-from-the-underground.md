@@ -7,9 +7,9 @@
 
 ## Part I
 
-Underground*
+### Author's Note
 
-*The author of the diary and the diary itself
+The author of the diary and the diary itself
  are, of course, imaginary. Nevertheless it is clear
  that such persons as the writer of these notes
  not only may, but positively must, exist in our
