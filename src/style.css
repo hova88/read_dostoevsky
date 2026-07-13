@@ -13,7 +13,7 @@
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 92px; }
-body { margin: 0; min-width: 320px; background: var(--paper); }
+body { overflow-x: hidden; margin: 0; min-width: 320px; background: var(--paper); }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; }
 ::selection { color: var(--paper); background: var(--ink); }
@@ -31,7 +31,7 @@ button { color: inherit; }
 .book { width: min(100% - 42px, 680px); margin: 0 auto; padding: clamp(150px, 21vh, 230px) 0 150px; }
 .book-header { min-height: min(58vh, 540px); }
 .book-year, .byline { margin: 0; color: var(--muted); font: 400 12px/1.5 var(--sans); letter-spacing: .06em; }
-h1 { max-width: 12ch; margin: 24px 0 28px; font-size: clamp(50px, 9vw, 86px); font-weight: 400; line-height: .93; letter-spacing: -.035em; }
+h1 { max-width: 12ch; margin: 24px 0 28px; overflow-wrap: break-word; font-size: clamp(50px, 9vw, 86px); font-weight: 400; line-height: .93; letter-spacing: -.035em; }
 .opening-rule { display: block; width: 32px; height: 1px; margin-top: 54px; background: var(--ink); }
 .book-body { font-size: clamp(20px, 2.1vw, 23px); line-height: 1.68; letter-spacing: -.008em; }
 .book-body p { margin: 0 0 1.05em; }
@@ -41,6 +41,8 @@ h1 { max-width: 12ch; margin: 24px 0 28px; font-size: clamp(50px, 9vw, 86px); fo
 .book-body h3 { margin: 4.2em 0 1.6em; font-size: clamp(31px, 4.5vw, 44px); line-height: 1.08; letter-spacing: -.025em; }
 .book-body h4 { margin: 3.5em 0 1.5em; font: 500 12px/1.4 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
 .book-body .note { margin: 3em 0; padding-left: 28px; border-left: 1px solid var(--line); color: #55534d; font-size: .88em; font-style: italic; text-indent: 0; }
+.sentence { --sentence-progress: 0%; padding-bottom: .08em; background-image: linear-gradient(#9a4d31, #9a4d31); background-position: left bottom; background-repeat: no-repeat; background-size: 0 1px; cursor: text; transition: color .25s; }
+.sentence.is-speaking { background-size: var(--sentence-progress) 1px; }
 .book-end { display: flex; align-items: center; gap: 18px; margin-top: 120px; color: var(--muted); font: 11px var(--sans); text-transform: uppercase; letter-spacing: .16em; }
 .book-end::before, .book-end::after { content: ''; height: 1px; flex: 1; background: var(--line); }
 
@@ -66,10 +68,19 @@ h1 { max-width: 12ch; margin: 24px 0 28px; font-size: clamp(50px, 9vw, 86px); fo
 .contents .level-4 { padding-left: 18px; color: #55534d; font-size: 14px; }
 .panel-open { overflow: hidden; }
 
+.audio-player { position: fixed; z-index: 25; bottom: 22px; left: 50%; display: grid; grid-template-columns: auto auto auto; gap: 18px; align-items: center; min-width: min(430px, calc(100% - 32px)); padding: 11px 15px; border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--paper) 92%, transparent); box-shadow: 0 10px 35px rgb(0 0 0 / 7%); backdrop-filter: blur(14px); font-family: var(--sans); transform: translate(-50%, 0); transition: opacity .25s, transform .25s, visibility .25s; }
+.audio-player[aria-hidden='true'] { visibility: hidden; opacity: 0; transform: translate(-50%, 8px); pointer-events: none; }
+.audio-toggle { display: inline-flex; gap: 9px; align-items: center; padding: 3px 0; border: 0; background: none; font: 500 11px/1 var(--sans); cursor: pointer; }
+.audio-icon { width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 6px solid currentColor; }
+.is-playing .audio-icon { width: 6px; height: 8px; border: 0; border-right: 2px solid currentColor; border-left: 2px solid currentColor; }
+.audio-reader { color: var(--muted); font-size: 10px; }
+.audio-time { justify-self: end; color: var(--muted); font: 10px/1 var(--sans); font-variant-numeric: tabular-nums; }
+
 @media (hover: hover) {
   .wordmark:hover, .contents-button:hover, .contents a:hover { color: #9a4d31; }
   .library nav button:hover { padding-left: 7px; color: #9a4d31; }
   .library nav button { transition: padding .2s, color .2s; }
+  .sentence.is-speaking:hover { color: #9a4d31; }
 }
 
 @media (max-width: 600px) {
@@ -77,10 +88,13 @@ h1 { max-width: 12ch; margin: 24px 0 28px; font-size: clamp(50px, 9vw, 86px); fo
   .current-book { display: none; }
   .book { width: min(100% - 38px, 680px); padding-top: 130px; }
   .book-header { min-height: 48vh; }
-  h1 { font-size: clamp(48px, 16vw, 68px); }
+  h1 { max-width: 100%; overflow-wrap: normal; font-size: clamp(46px, 12.5vw, 50px); }
   .book-body { font-size: 20px; line-height: 1.62; }
   .book-body p + p { text-indent: 1.3em; }
   .library-panel, .contents-panel { padding: 74px 24px 32px; }
+  .book { padding-bottom: 190px; }
+  .audio-player { bottom: 12px; grid-template-columns: 1fr auto; width: calc(100% - 24px); min-width: 0; }
+  .audio-reader { display: none; }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -91,6 +105,11 @@ h1 { max-width: 12ch; margin: 24px 0 28px; font-size: clamp(50px, 9vw, 86px); fo
 }
 
 @media print {
-  .topbar, .progress, .library, .contents { display: none; }
+  .topbar, .progress, .library, .contents, .audio-player { display: none; }
   .book { width: 100%; padding: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0s !important; }
 }
