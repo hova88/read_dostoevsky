@@ -6,14 +6,15 @@ type Book = {
   shortTitle: string
   year: string
   load: () => Promise<string>
-  audio?: { file: string; timeline: string; reader: string }
+  audio?: { file?: string; timeline: string; reader: string }
 }
 
 type Block =
   | { type: 'heading'; level: 2 | 3 | 4; text: string; id: string }
   | { type: 'paragraph'; text: string; note: boolean }
 
-type Timing = { i: number; start: number; end: number; score: number }
+type Timing = { i: number; start: number; end: number; score: number; track?: number }
+type AudioTrack = { file: string; duration: number }
 
 const books: Book[] = [
   {
@@ -24,9 +25,23 @@ const books: Book[] = [
     load: async () => (await import('../books/notes-from-the-underground.md?raw')).default,
     audio: { file: './audio/underground.mp4', timeline: './audio/underground.timeline.json', reader: 'Bob Neufeld · LibriVox' },
   },
-  { id: 'crime', title: 'Crime and Punishment', shortTitle: 'Crime & Punishment', year: '1866', load: async () => (await import('../books/crime_and_punishment.md?raw')).default },
+  {
+    id: 'crime',
+    title: 'Crime and Punishment',
+    shortTitle: 'Crime & Punishment',
+    year: '1866',
+    load: async () => (await import('../books/crime_and_punishment.md?raw')).default,
+    audio: { timeline: './audio/crime.timeline.json', reader: 'LibriVox Volunteers' },
+  },
   { id: 'idiot', title: 'The Idiot', shortTitle: 'The Idiot', year: '1869', load: async () => (await import('../books/the_idiot.md?raw')).default },
-  { id: 'brothers', title: 'The Brothers Karamazov', shortTitle: 'The Brothers Karamazov', year: '1880', load: async () => (await import('../books/the_brothers_karamazov.md?raw')).default },
+  {
+    id: 'brothers',
+    title: 'The Brothers Karamazov',
+    shortTitle: 'The Brothers Karamazov',
+    year: '1880',
+    load: async () => (await import('../books/the_brothers_karamazov.md?raw')).default,
+    audio: { timeline: './audio/brothers.timeline.json', reader: 'LibriVox Volunteers' },
+  },
 ]
 
 const app = document.querySelector<HTMLDivElement>('#app')!
@@ -75,6 +90,9 @@ const audioToggle = player.querySelector<HTMLButtonElement>('.audio-toggle')!
 const audioAction = player.querySelector<HTMLElement>('.audio-action')!
 const audioTime = player.querySelector<HTMLElement>('.audio-time')!
 let timeline: Timing[] = []
+let trackTimelines: Timing[][] = []
+let audioTracks: AudioTrack[] = []
+let activeTrack = 0
 let activeSentence: HTMLElement | null = null
 let audioFrame = 0
 let resumeAfterHover = false
@@ -93,7 +111,7 @@ window.addEventListener('touchstart', suspendAudioFollow, { passive: true })
 audioToggle.addEventListener('click', toggleAudio)
 audio.addEventListener('play', updateAudioState)
 audio.addEventListener('pause', updateAudioState)
-audio.addEventListener('ended', updateAudioState)
+audio.addEventListener('ended', advanceAudioTrack)
 audio.addEventListener('timeupdate', saveAudioPosition)
 
 void openBook(activeBook)
@@ -221,6 +239,9 @@ async function prepareAudio(book: Book) {
   audio.removeAttribute('src')
   audio.load()
   timeline = []
+  trackTimelines = []
+  audioTracks = []
+  activeTrack = 0
   activeSentence = null
   player.setAttribute('aria-hidden', String(!book.audio))
   if (!book.audio) return
@@ -229,14 +250,14 @@ async function prepareAudio(book: Book) {
   try {
     const response = await fetch(book.audio.timeline)
     if (!response.ok) throw new Error(`Timeline request failed: ${response.status}`)
-    const data = await response.json() as { sentences: Timing[] }
+    const data = await response.json() as { sentences: Timing[]; tracks?: AudioTrack[] }
     timeline = data.sentences
+    audioTracks = data.tracks ?? (book.audio.file ? [{ file: book.audio.file, duration: 0 }] : [])
+    if (!audioTracks.length) throw new Error('Timeline has no audio tracks')
+    trackTimelines = audioTracks.map((_, track) => timeline.filter((timing) => (timing.track ?? 0) === track))
     bindSentenceInteraction()
-    audio.addEventListener('loadedmetadata', () => {
-      audio.currentTime = Number(localStorage.getItem(`audio:${book.id}`) ?? 0)
-      updateAudioState()
-    }, { once: true })
-    audio.src = book.audio.file
+    const saved = parseAudioPosition(localStorage.getItem(`audio:${book.id}`))
+    loadAudioTrack(Math.min(saved.track, audioTracks.length - 1), saved.time)
   } catch (error) {
     console.error(error)
     player.setAttribute('aria-hidden', 'true')
@@ -248,8 +269,13 @@ function bindSentenceInteraction() {
     sentence.addEventListener('click', () => {
       const timing = timeline[Number(sentence.dataset.sentence)]
       if (!timing) return
-      audio.currentTime = timing.start
-      void audio.play()
+      const track = timing.track ?? 0
+      if (track === activeTrack) {
+        audio.currentTime = timing.start
+        void audio.play()
+      } else {
+        loadAudioTrack(track, timing.start, true)
+      }
     })
     sentence.addEventListener('pointerenter', () => {
       if (sentence !== activeSentence || audio.paused) return
@@ -279,15 +305,16 @@ function updateAudioState() {
 }
 
 function updateAudioPosition() {
-  if (!timeline.length) return
-  if (audio.currentTime < timeline[0].start) {
+  const timings = trackTimelines[activeTrack] ?? []
+  if (!timings.length) return
+  if (audio.currentTime < timings[0].start) {
     activeSentence?.classList.remove('is-speaking')
     activeSentence = null
-    audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`
+    updateAudioTime()
     if (!audio.paused) audioFrame = requestAnimationFrame(updateAudioPosition)
     return
   }
-  const timing = timeline[findTiming(audio.currentTime)]
+  const timing = timings[findTiming(audio.currentTime, timings)]
   const sentence = document.querySelector<HTMLElement>(`[data-sentence="${timing.i}"]`)
   const ratio = Math.max(0, Math.min(1, (audio.currentTime - timing.start) / (timing.end - timing.start)))
 
@@ -299,16 +326,16 @@ function updateAudioPosition() {
     followSentence(sentence)
   }
   sentence?.style.setProperty('--sentence-progress', `${ratio * 100}%`)
-  audioTime.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`
+  updateAudioTime()
   if (!audio.paused) audioFrame = requestAnimationFrame(updateAudioPosition)
 }
 
-function findTiming(time: number) {
+function findTiming(time: number, timings: Timing[]) {
   let low = 0
-  let high = timeline.length - 1
+  let high = timings.length - 1
   while (low < high) {
     const middle = Math.ceil((low + high) / 2)
-    if (timeline[middle].start <= time) low = middle
+    if (timings[middle].start <= time) low = middle
     else high = middle - 1
   }
   return low
@@ -328,8 +355,42 @@ function suspendAudioFollow() {
 
 function saveAudioPosition() {
   if (activeBook.audio && Number.isFinite(audio.currentTime)) {
-    localStorage.setItem(`audio:${activeBook.id}`, String(audio.currentTime))
+    localStorage.setItem(`audio:${activeBook.id}`, JSON.stringify({ track: activeTrack, time: audio.currentTime }))
   }
+}
+
+function loadAudioTrack(track: number, time = 0, autoplay = false) {
+  const source = audioTracks[track]
+  if (!source) return
+  activeTrack = track
+  audio.src = source.file
+  audio.addEventListener('loadedmetadata', () => {
+    audio.currentTime = Math.min(time, audio.duration || time)
+    updateAudioState()
+    if (autoplay) void audio.play()
+  }, { once: true })
+  audio.load()
+}
+
+function advanceAudioTrack() {
+  if (activeTrack + 1 < audioTracks.length) loadAudioTrack(activeTrack + 1, 0, true)
+  else updateAudioState()
+}
+
+function parseAudioPosition(value: string | null) {
+  if (!value) return { track: 0, time: 0 }
+  try {
+    const saved = JSON.parse(value) as { track?: number; time?: number }
+    return { track: Math.max(0, saved.track ?? 0), time: Math.max(0, saved.time ?? 0) }
+  } catch {
+    return { track: 0, time: Math.max(0, Number(value) || 0) }
+  }
+}
+
+function updateAudioTime() {
+  const elapsed = audioTracks.slice(0, activeTrack).reduce((sum, track) => sum + track.duration, 0) + audio.currentTime
+  const duration = audioTracks.reduce((sum, track) => sum + track.duration, 0) || audio.duration
+  audioTime.textContent = `${formatTime(elapsed)} / ${formatTime(duration)}`
 }
 
 function formatTime(value: number) {
