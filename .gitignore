@@ -1,4 +1,6 @@
 node_modules
 dist
+downloads
+__pycache__
 .env
 .env.local
